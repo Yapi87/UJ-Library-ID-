@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UJ Online Library</title>
+<style>
+:root{--kertas:#e7f2ea;--tinta:#000;--merah:#06391f;--hijau:#0f7a45;--kuningan:#f5b800;--putih:#ffffff}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body.gelap{--kertas:#07150e;--putih:#10261a;--tinta:#eaf7ef;--hijau:#0b5a33;--merah:#14744a}
+body{margin:0;background:var(--kertas);color:var(--tinta);font:18px/1.5 Georgia,serif}
+header{background:var(--hijau);color:#fff;border-bottom:8px solid var(--kuningan);box-shadow:0 8px 0 var(--tinta);margin-bottom:8px;padding:16px 20px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+h1{margin:0;font:700 clamp(26px,5vw,44px)/1 "Courier New",monospace;letter-spacing:-1px}
+button,input,select{font:inherit;color:inherit}
+button{background:var(--kuningan);border:3px solid var(--tinta);box-shadow:4px 4px 0 var(--tinta);padding:6px 14px;cursor:pointer;font-weight:700;color:#000}
+button:active{transform:translate(4px,4px);box-shadow:none}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:4px solid var(--merah);outline-offset:2px}
+.bar{display:flex;flex-wrap:wrap;gap:12px;padding:16px 20px;align-items:center}
+.bar input[type=search],.bar select{background:var(--putih);border:3px solid var(--tinta);padding:8px 12px;min-width:0}
+.bar input[type=search]{flex:1 1 220px}
+main{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:20px;padding:8px 20px 40px}
+.kartu{background:var(--putih);border:4px solid var(--tinta);box-shadow:8px 8px 0 var(--tinta);padding:14px;display:flex;flex-direction:column;gap:8px}
+.kartu h2{margin:0;font-size:19px;line-height:1.25;overflow-wrap:anywhere}
+.meta{font:14px "Courier New",monospace;border-top:2px dashed var(--tinta);padding-top:6px}
+.aksi{display:flex;flex-wrap:wrap;gap:8px;margin-top:auto}
+.st-selesai{background:var(--hijau);color:#f6f0dc}.st-sedang{background:var(--putih);color:var(--tinta)}
+main.baris{grid-template-columns:1fr}.baris .kartu{flex-direction:row;flex-wrap:wrap;align-items:center;gap:12px}.baris .sampul{display:none}.baris h2{flex:1 1 260px}.baris .meta{border:0;padding:0}.baris .aksi{margin:0}
+
+.fav.on{background:var(--merah);color:#f6f0dc}
+.sampul{position:relative;height:170px;background:var(--hijau);border:3px solid var(--tinta);display:grid;place-items:center;color:#f6f0dc;font:700 30px "Courier New",monospace}
+.sampul img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+#lanjut{padding:0 20px 8px}#lanjut h2{margin:0 0 10px;font:700 22px "Courier New",monospace}
+#lanjut div{display:flex;flex-wrap:wrap;gap:12px}
+#jumlah{font:14px "Courier New",monospace}
+#catatan{width:100%;height:130px;resize:vertical;border:0;border-bottom:5px solid var(--tinta);background:var(--putih);color:var(--tinta);padding:10px 14px;font:inherit}
+.info{grid-column:1/-1;border:4px solid var(--tinta);background:var(--putih);padding:20px}
+#baca{position:fixed;inset:0;background:var(--kertas);display:none;flex-direction:column;z-index:5}
+#baca.buka{display:flex}
+#baca .atas{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:10px 14px;background:var(--merah);color:#f6f0dc;border-bottom:5px solid var(--tinta)}
+#baca .atas b{flex:1 1 200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#baca input{width:80px;background:var(--putih);color:var(--tinta);border:3px solid var(--tinta);padding:4px 8px}
+iframe{flex:1;border:0;width:100%;background:#fff}
+.muat{text-align:center}.muat h2{margin:0 0 8px;font:700 24px "Courier New",monospace}.muat p{margin:6px 0}
+.rak{display:flex;gap:6px;justify-content:center;align-items:flex-end;height:80px;margin-bottom:14px}
+.rak i{width:24px;border:3px solid var(--tinta);animation:naik .9s ease-in-out infinite alternate}
+.rak i:nth-child(1){height:40px;background:var(--hijau)}.rak i:nth-child(2){height:62px;background:var(--kuningan);animation-delay:.15s}
+.rak i:nth-child(3){height:48px;background:#fff;animation-delay:.3s}.rak i:nth-child(4){height:58px;background:var(--hijau);animation-delay:.45s}
+.rak i:nth-child(5){height:44px;background:var(--kuningan);animation-delay:.6s}
+@keyframes naik{to{transform:translateY(-14px)}}
+@media (prefers-reduced-motion:reduce){.rak i{animation:none}}
+body{background-image:radial-gradient(rgba(6,57,31,.2) 1.5px,transparent 1.7px);background-size:22px 22px}
+body.gelap{background-image:radial-gradient(rgba(255,255,255,.09) 1.5px,transparent 1.7px)}
+.merek{display:flex;gap:12px;align-items:center}
+.lambang{display:grid;place-items:center;width:52px;height:46px;background:var(--kuningan);color:#000;border:4px solid var(--tinta);box-shadow:4px 4px 0 var(--tinta);font:700 22px "Courier New",monospace;font-style:normal;transform:rotate(-6deg)}
+.tips{display:flex;align-items:center;gap:12px;background:var(--kuningan);color:#000;border-bottom:4px solid var(--tinta);padding:8px 20px;min-height:52px;font:700 16px "Courier New",monospace}
+.tag{background:#000;color:var(--kuningan);padding:2px 10px;font-style:normal}
+#tipTeks{flex:1}#tipTeks.ganti{animation:tipmasuk .4s ease-out}
+.titik{display:flex;gap:6px}.titik button{width:16px;height:16px;padding:0;box-shadow:none;border:2px solid #000;background:transparent}.titik button.on{background:#000}
+@keyframes tipmasuk{from{opacity:0;transform:translateY(8px)}}
+#hero{display:grid;grid-template-columns:1.2fr 1fr;gap:24px;padding:28px 20px 16px;align-items:center}
+@media (max-width:760px){#hero{grid-template-columns:1fr}}
+.heroteks h2{margin:0 0 12px;font:700 clamp(32px,6vw,58px)/1.1 "Courier New",monospace;letter-spacing:-1px}
+.heroteks h2 span{background:var(--kuningan);color:#000;padding:0 8px;border:3px solid var(--tinta);box-shadow:4px 4px 0 var(--tinta)}
+.heroteks p{margin:0;max-width:46ch}
+.statbox{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.statbox div{background:var(--putih);border:4px solid var(--tinta);box-shadow:6px 6px 0 var(--tinta);padding:10px 14px;transition:transform .12s;font-size:16px}
+.statbox div:nth-child(even){background:var(--kuningan);color:#000}
+.statbox div:hover{transform:translate(-3px,-3px) rotate(-1deg)}
+.statbox b{display:block;font:700 42px/1.1 "Courier New",monospace;color:var(--hijau)}
+body.gelap .statbox div:nth-child(odd) b{color:var(--kuningan)}.statbox div:nth-child(even) b{color:#000}
+.sampul{height:240px;display:flex;align-items:flex-end;padding:16px 12px 12px 30px;font-size:16px;transition:transform .2s}
+.sampul::before{content:"";position:absolute;left:0;top:0;bottom:0;width:14px;background:rgba(0,0,0,.4);border-right:3px solid var(--tinta);z-index:2}
+.sampul img{z-index:1}
+.fj{font:700 20px/1.2 Georgia,serif;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere;text-align:left}
+.fm{position:absolute;top:8px;right:8px;background:#000;color:#fff;font:700 12px "Courier New",monospace;padding:2px 6px;font-style:normal;z-index:3}
+.kartu:hover .sampul{transform:perspective(700px) rotateY(-6deg)}
+@keyframes muncul{from{opacity:0;transform:translateY(18px) rotate(-1deg)}}
+@keyframes masuk{from{opacity:0;transform:translateY(40px)}}
+@keyframes jatuh{to{transform:translateY(105vh) rotate(540deg)}}
+.chips{display:flex;flex-wrap:wrap;gap:10px;padding:0 20px 12px}
+.chip{background:var(--putih);color:var(--tinta);box-shadow:3px 3px 0 var(--tinta);padding:4px 12px}
+.chip b{background:var(--kuningan);color:#000;padding:0 7px;border:2px solid var(--tinta);margin-left:6px;font:700 13px "Courier New",monospace}
+.chip.on{background:var(--hijau);color:#fff}
+.prog{display:flex;gap:12px;align-items:center;padding:0 20px 12px;font:14px "Courier New",monospace}
+.prog div{flex:1;height:20px;border:3px solid var(--tinta);background:var(--putih)}
+.prog i{display:block;height:100%;width:0;background:var(--kuningan);transition:width .9s cubic-bezier(.2,.8,.2,1)}
+mark{background:var(--kuningan);color:#000;padding:0 2px}
+.sampul{overflow:hidden}.sampul img{transition:transform .3s}
+.kartu:hover{transform:translate(-4px,-4px);box-shadow:12px 12px 0 var(--tinta)}.kartu:hover .sampul img{transform:scale(1.08)}
+#toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,120px);background:var(--tinta);color:var(--kertas);border:3px solid var(--kuningan);padding:10px 18px;z-index:30;transition:transform .25s;pointer-events:none}
+#toast.tampil{transform:translate(-50%,0)}
+#atas{position:fixed;right:18px;bottom:24px;z-index:4}
+.konfeti{position:fixed;top:-20px;width:10px;height:14px;border:2px solid #000;z-index:40;animation:jatuh 1.5s ease-in forwards}
+@media (prefers-reduced-motion:no-preference){.anim .kartu{animation:muncul .45s both;animation-delay:calc(var(--i)*40ms)}#baca.buka{animation:masuk .25s ease-out}.kartu{transition:transform .12s,box-shadow .12s}}
+@media (prefers-reduced-motion:no-preference){button{transition:transform .08s,box-shadow .08s}}
+.kartu h2[data-fokus]{cursor:pointer}.kartu h2[data-fokus]:hover{text-decoration:underline;text-decoration-color:var(--hijau);text-decoration-thickness:3px;text-underline-offset:4px}
+.kartu h2[data-fokus]:focus-visible{outline:4px solid var(--merah);outline-offset:2px}
+.kartu.besar{grid-column:1/-1;gap:18px;padding:20px}
+.kartu.besar:hover{transform:none;box-shadow:8px 8px 0 var(--tinta)}
+.besar>button[data-semua]{align-self:flex-start}
+.besar .isi{display:grid;grid-template-columns:minmax(180px,260px) 1fr;gap:24px;align-items:start}
+@media (max-width:640px){.besar .isi{grid-template-columns:1fr}}
+.besar .sampul{height:340px}
+.besar .detail{display:flex;flex-direction:column;gap:14px;min-width:0}
+.besar .detail h2{font:700 clamp(24px,4vw,38px)/1.15 "Courier New",monospace}
+.besar .meta{font-size:16px}
+.langkah{display:flex;flex-wrap:wrap;gap:10px}
+.langkah button{background:var(--putih);color:var(--tinta)}
+.langkah button.on{background:var(--hijau);color:#fff}
+.besar label{font:14px "Courier New",monospace;display:flex;align-items:center;gap:10px}
+.besar input[type=number]{width:110px;background:var(--putih);color:var(--tinta);border:3px solid var(--tinta);padding:6px 10px}
+.besar textarea{width:100%;height:110px;resize:vertical;background:var(--putih);color:var(--tinta);border:3px solid var(--tinta);padding:10px;font:inherit}
+.baris .kartu.besar{flex-direction:column;align-items:stretch}.baris .besar .sampul{display:flex}
+.nav{display:flex;flex-wrap:wrap;gap:10px;border-top:2px dashed var(--tinta);padding-top:14px}
+.serupa{display:flex;flex-wrap:wrap;gap:10px;align-items:center}.serupa h3{margin:0;font:700 16px "Courier New",monospace;flex-basis:100%}
+.mirip{background:var(--putih);color:var(--tinta);box-shadow:3px 3px 0 var(--tinta);padding:4px 12px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mirip:hover{background:var(--kuningan);color:#000}
+::selection{background:var(--kuningan);color:#000}
+header{position:relative;overflow:hidden;background:linear-gradient(110deg,var(--hijau),var(--merah))}
+header::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 88% 0,rgba(245,184,0,.4),transparent 45%);pointer-events:none}
+h1{text-shadow:3px 3px 0 rgba(0,0,0,.35)}
+.lambang{transition:transform .25s}.lambang:hover{transform:rotate(6deg) scale(1.12)}
+.bar{position:sticky;top:0;z-index:4;background:color-mix(in srgb,var(--kertas) 88%,transparent);backdrop-filter:blur(8px);border-bottom:3px solid var(--tinta)}
+button:hover:not(:active){transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--tinta)}
+.titik button:hover:not(:active){transform:none;box-shadow:none}
+.chips{gap:8px;align-items:center}.chip{font-size:15px;padding:2px 10px}
+.chip.on{box-shadow:4px 4px 0 var(--kuningan),4px 4px 0 2px var(--tinta)}
+.chip.pop{animation:pop .35s cubic-bezier(.2,1.6,.4,1)}.chip .x{margin-left:8px;font-weight:700}
+.kat-info{font:700 14px "Courier New",monospace}
+@keyframes pop{from{transform:scale(.6);opacity:0}}
+.kartu:hover .sampul{transform:none}
+.sampul::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 40%,rgba(255,255,255,.4) 50%,transparent 60%);transform:translateX(-120%);transition:transform .6s;z-index:3;pointer-events:none}
+.kartu:hover .sampul::after{transform:translateX(120%)}
+.prog i{background:repeating-linear-gradient(45deg,var(--kuningan) 0 10px,#ffd84d 10px 20px);background-size:28px 28px}
+@media (prefers-reduced-motion:no-preference){
+html{scroll-behavior:smooth}
+.prog i{animation:garis 1s linear infinite}@keyframes garis{to{background-position:28px 0}}
+.kartu:not(.besar):hover{transform:perspective(900px) translate(-4px,-4px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg))}}
+/* ===== Rapihin tata letak ===== */
+header,.tips,#hero,.bar,.chips,.prog,#lanjut,main{padding-inline:max(20px,calc((100% - 1280px)/2))}
+button{min-height:40px;line-height:1.1}
+.bar{gap:10px;padding-block:14px}
+.bar input[type=search],.bar select,.bar button,.bar label{height:44px}
+.bar label{display:flex;align-items:center;gap:8px;padding:0 12px;background:var(--putih);border:3px solid var(--tinta);font-size:16px;white-space:nowrap}
+.bar label input{width:18px;height:18px;margin:0;accent-color:var(--hijau)}
+#jumlah{margin-left:auto;font-size:13px;opacity:.85}
+@media (max-width:899px){.bar{position:static;backdrop-filter:none}#jumlah{margin-left:0;flex-basis:100%}}
+.chips{flex-wrap:nowrap;overflow-x:auto;gap:10px;padding-top:6px;padding-bottom:14px;scroll-snap-type:x proximity;scrollbar-width:thin;scrollbar-color:var(--hijau) transparent;-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 48px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 48px),transparent)}
+.chip{flex:none;scroll-snap-align:start;display:flex;align-items:center;gap:8px;white-space:nowrap;min-height:40px;padding:4px 12px}
+.chip b{margin-left:0}
+.prog{padding-block:4px 16px}
+main{gap:28px;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));padding-block:12px 56px}
+.kartu{box-shadow:6px 6px 0 var(--tinta);padding:16px;gap:10px}
+.kartu:not(.besar):hover{box-shadow:10px 10px 0 var(--tinta)}
+.sampul{height:220px}
+.kartu h2{font-size:18px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.kartu .aksi{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kartu .aksi button{font-size:14px;padding:6px 8px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.baris .kartu .aksi,.kartu.besar .aksi{display:flex;flex-wrap:wrap}
+.baris .kartu .aksi button,.kartu.besar .aksi button{font-size:16px;padding:6px 14px}
+.baris .kartu{padding:12px 16px}
+#lanjut{padding-block:4px 16px}
+#lanjut h2{font-size:20px}
+.statbox{gap:16px}
+/* ===== Poles akhir ===== */
+#sp{position:fixed;top:0;left:0;height:6px;width:0;background:linear-gradient(90deg,var(--kuningan),#fff);border-bottom:2px solid #000;z-index:50;pointer-events:none}
+.salam{display:inline-block;margin-bottom:14px;padding:4px 14px;background:var(--tinta);color:var(--kertas);font:700 14px "Courier New",monospace;border-radius:999px}
+.sampul{box-shadow:inset -8px 0 14px rgba(0,0,0,.18),inset 0 -50px 50px -30px rgba(0,0,0,.3)}
+.fs,.fv{position:absolute;z-index:3;font:700 11px "Courier New",monospace;font-style:normal;border:2px solid #000;padding:1px 6px}
+.fs{top:8px;left:22px;background:var(--kuningan);color:#000}
+.fs.st-selesai{background:#0f7a45;color:#fff}.fs.st-sedang{background:#fff;color:#000}
+.fv{top:34px;right:8px;background:#e0245e;color:#fff;font-size:13px}
+.kartu.besar .sampul{transform:perspective(900px) rotateY(-14deg);transition:transform .4s}
+.kartu.besar .sampul:hover{transform:perspective(900px) rotateY(0) scale(1.03)}
+@media (prefers-reduced-motion:no-preference){
+.heroteks h2 span{background:linear-gradient(100deg,var(--kuningan) 40%,#ffe27a 50%,var(--kuningan) 60%);background-size:250% 100%;animation:kilau 3.5s linear infinite}
+@keyframes kilau{to{background-position:-250% 0}}
+.kartu.besar{animation:masuk .3s ease-out}}
+</style>
+</head>
+<body>
+<div id="sp" aria-hidden="true"></div>
+<header>
+  <div class="merek"><i class="lambang" aria-hidden="true">UJ</i><h1>UJ Online Library</h1></div>
+  <button id="tema">Dark mode</button>
+</header>
+<div class="tips"><b class="tag">Tip</b><span id="tipTeks"></span><span class="titik" id="tipTitik"></span></div>
+<section id="hero" hidden>
+  <div class="heroteks"><span class="salam" id="salam"></span><h2>Find your next <span>read</span>.</h2><p>Our library, open anytime. Save favorites, note your last page, and finish one book at a time.</p></div>
+  <div class="statbox"><div><b id="sBuku">0</b>Books</div><div><b id="sKat">0</b>Categories</div><div><b id="sFav">0</b>Your favorites</div><div><b id="sSelesai">0</b>Finished</div></div>
+</section>
+<div class="bar" id="filter" hidden>
+  <input type="search" id="cari" placeholder="Search book titles (press / to jump here)" aria-label="Search book titles">
+  <label><input type="checkbox" id="favsaja"> Favorites only</label>
+  <select id="statusf" aria-label="Filter by reading status"><option value="">All statuses</option><option value="ingin">Want to read</option><option value="sedang">Reading</option><option value="selesai">Finished</option></select>
+  <button id="acak">Surprise me</button>
+  <button id="tampilan">List view</button>
+  <span id="jumlah"></span>
+</div>
+<div id="chips" class="chips" role="group" aria-label="Choose category" hidden></div>
+<div id="progres" class="prog" hidden><div><i id="progIsi"></i></div><span id="progTeks"></span></div>
+<section id="lanjut" hidden></section>
+<main id="daftar"></main>
+<div id="toast" role="status" aria-live="polite"></div>
+<button id="atas" hidden>Back to top</button>
+<section id="baca" aria-label="Book reader">
+  <div class="atas">
+    <b id="judul"></b>
+    <label>Last page <input type="number" id="hal" min="1"></label>
+    <button id="simpanHal">Save page</button>
+    <button id="btnCatatan">Notes</button>
+    <button id="unduhBuku">Download</button>
+    <button id="tutup">Close book</button>
+  </div>
+  <textarea id="catatan" hidden placeholder="Write notes for this book (saved automatically)" aria-label="Book notes"></textarea>
+  <iframe id="bingkai" title="Book content" allow="autoplay"></iframe>
+</section>
+
+<script>
+// ====== ISI BAGIAN INI (lihat README.md) ======
+const KONFIG = {
+  DRIVE_API_KEY: 'AIzaSyCoOUbebQvZ_RE2wZvmKeaLdoJNQ5Pr7u0',
+  FOLDER_ID: '1pRUOQaIkK6WBxlsd8IGkiF06LY3O5JjS'
+};
+// ==============================================
+
+const $ = id => document.getElementById(id);
+let buku = [], milik = {}, aktif = null, katAktif = '', baru = true, fokus = null;
+const STATUS = ['', 'ingin', 'sedang', 'selesai'], NAMA = { '': 'Not started', ingin: 'Want to read', sedang: 'Reading', selesai: 'Finished' };
+
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pesan = t => { $('daftar').innerHTML = `<div class="info">${t}</div>`; };
+
+async function telusuri(id, kategori) {
+  const q = encodeURIComponent(`'${id}' in parents and trashed=false`);
+  const u = `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name,mimeType,thumbnailLink)&pageSize=1000&key=${KONFIG.DRIVE_API_KEY}`;
+  const r = await fetch(u);
+  if (!r.ok) throw new Error('Drive ' + r.status);
+  for (const f of (await r.json()).files) {
+    if (f.mimeType === 'application/vnd.google-apps.folder') await telusuri(f.id, f.name);
+    else { buku.push({ id: f.id, judul: f.name.replace(/\.[^.]+$/, ''), kat: kategori || 'Uncategorized', fmt: (f.name.split('.').pop() || '').toLowerCase(), thumb: f.thumbnailLink ? f.thumbnailLink.replace(/=s\d+$/, '=s400') : '' });
+      const el = $('muatHitung'); if (el) el.textContent = 'So far found ' + buku.length + ' books.'; }
+  }
+}
+
+// Favorit dan halaman terakhir disimpan di peramban (localStorage), per perangkat.
+const KUNCI = 'perpustakaan-kelas';
+function muatMilik() {
+  try { milik = JSON.parse(localStorage.getItem(KUNCI)) || {}; } catch (e) { milik = {}; }
+}
+
+function simpan(id, ubah, diam) {
+  milik[id] = { favorite: false, page: null, ...milik[id], ...ubah };
+  try { localStorage.setItem(KUNCI, JSON.stringify(milik)); }
+  catch (e) { alert('Cannot save in this browser (private mode?).'); }
+  if (!diam) tampil();
+}
+
+function tampil() {
+  const q = $('cari').value.toLowerCase(), k = katAktif, fav = $('favsaja').checked;
+  let hasil = buku.filter(b => b.judul.toLowerCase().includes(q) && (!k || b.kat === k) && (!fav || (milik[b.id] || {}).favorite) && (!$('statusf').value || (milik[b.id] || {}).status === $('statusf').value));
+  const m0 = b => milik[b.id] || {};
+  hasil.sort((a, b) => a.judul.localeCompare(b.judul, 'en'));
+  if (fokus) hasil = buku.filter(b => b.id === fokus);
+  const hit = st => buku.filter(b => m0(b).status === st).length;
+  $('jumlah').textContent = hasil.length + ' of ' + buku.length + ' books. Finished ' + hit('selesai') + ', reading ' + hit('sedang') + '.';
+  const lj = buku.filter(b => m0(b).opened).sort((a, b) => m0(b).opened - m0(a).opened).slice(0, 3);
+  $('lanjut').hidden = !!fokus || !lj.length;
+  $('hero').hidden = $('filter').hidden = $('chips').hidden = $('progres').hidden = !!fokus;
+  $('lanjut').innerHTML = '<h2>Continue reading</h2><div>' + lj.map(b => `<button data-baca="${b.id}">${esc(b.judul)}${m0(b).page ? ' (p. ' + m0(b).page + ')' : ''}</button>`).join('') + '</div>';
+  $('daftar').classList.toggle('anim', baru); baru = false;
+  statHero();
+  const tot = buku.length || 1, pct = Math.round(hit('selesai') / tot * 100);
+  $('progIsi').style.width = pct + '%'; $('progTeks').textContent = pct + '% of the collection finished';
+  if (!hasil.length) return pesan('No books match. Try a different keyword or category.');
+  if (fokus) {
+    const b = hasil[0], m = milik[b.id] || {}, w = warna(b.judul), st = m.status || '';
+    const lain = buku.filter(x => x.kat === b.kat && x.id !== b.id).slice(0, 6);
+    $('daftar').innerHTML = `<article class="kartu besar"><button data-semua="1">&larr; Back to all books</button>
+      <div class="isi"><div class="sampul" style="background:${w[0]};color:${w[1]}"><span class="fj">${esc(b.judul)}</span><em class="fm">${esc(b.fmt)}</em>${lencana(m)}${b.thumb ? `<img src="${esc(b.thumb)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">` : ''}</div>
+      <div class="detail"><h2>${esc(b.judul)}</h2>
+        <div class="meta">${esc(b.kat)}, ${esc(b.fmt)}${m.page ? `, stopped at p. ${m.page}` : ''}</div>
+        <div class="langkah" role="group" aria-label="Reading status">${STATUS.map(s => `<button data-set="${s}" class="${st === s ? 'on' : ''}" aria-pressed="${st === s}">${NAMA[s]}</button>`).join('')}</div>
+        <label>Last page <input type="number" id="fokusHal" min="1" value="${m.page || ''}"></label>
+        <textarea id="fokusCatatan" placeholder="Write notes for this book (saved automatically)" aria-label="Book notes">${esc(m.note || '')}</textarea>
+        <div class="aksi"><button data-baca="${b.id}">${m.page ? 'Continue' : 'Read'}</button>
+          <button class="fav ${m.favorite ? 'on' : ''}" data-fav="${b.id}" aria-pressed="${!!m.favorite}">${m.favorite ? 'Favorited' : 'Add favorite'}</button>
+          <button data-unduh="${b.id}" title="Download this book">Download</button></div></div></div>
+      <div class="nav"><button data-geser="-1">&larr; Previous book</button><button data-geser="1">Next book &rarr;</button><span class="meta" style="border:0;padding:6px 0">Tip: use the arrow keys, Esc to go back</span></div>
+      ${lain.length ? `<div class="serupa"><h3>More in ${esc(b.kat)}</h3>${lain.map(x => `<button class="mirip" data-fokus="${x.id}">${esc(x.judul)}</button>`).join('')}</div>` : ''}</article>`;
+    return;
+  }
+  $('daftar').innerHTML = hasil.map((b, i) => {
+    const m = milik[b.id] || {}, w = warna(b.judul);
+    return `<article class="kartu" style="--i:${Math.min(i, 20)}"><div class="sampul" style="background:${w[0]};color:${w[1]}"><span class="fj">${esc(b.judul)}</span><em class="fm">${esc(b.fmt)}</em>${lencana(m)}${b.thumb ? `<img src="${esc(b.thumb)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ''}</div><h2 data-fokus="${b.id}" tabindex="0" role="button" title="Click to focus on this book">${sorot(b.judul)}</h2>
+      <div class="meta">${esc(b.kat)}, ${esc(b.fmt)}${m.page ? `, stopped at p. ${m.page}` : ''}${m.note ? ', has notes' : ''}</div>
+      <div class="aksi"><button data-baca="${b.id}">${m.page ? 'Continue' : 'Read'}</button>
+      <button class="st-${m.status || 'belum'}" data-status="${b.id}" title="Click to change status">${NAMA[m.status || '']}</button>
+      <button class="fav ${m.favorite ? 'on' : ''}" data-fav="${b.id}" aria-pressed="${!!m.favorite}">${m.favorite ? 'Favorited' : 'Add favorite'}</button>
+      <button data-unduh="${b.id}" title="Download this book">Download</button></div></article>`;
+  }).join('');
+}
+
+function buka(id) {
+  aktif = buku.find(b => b.id === id);
+  $('judul').textContent = aktif.judul;
+  $('hal').value = (milik[id] || {}).page || '';
+  $('catatan').value = (milik[id] || {}).note || '';
+  $('catatan').hidden = true;
+  simpan(id, { opened: Date.now(), ...((milik[id] || {}).status ? {} : { status: 'sedang' }) }, true);
+  $('bingkai').src = `https://drive.google.com/file/d/${id}/preview`;
+  $('baca').classList.add('buka');
+}
+
+document.onclick = e => {
+  const t = e.target;
+  if (t.dataset.baca) buka(t.dataset.baca);
+  const c = t.closest('.chip');
+  if (c) { katAktif = c.dataset.kat; baru = true; chips(); tampil(); if (katAktif) scrollTo({ top: Math.max(0, $('chips').offsetTop - 90), behavior: kurangGerak ? 'auto' : 'smooth' }); }
+  if (t.dataset.unduh) unduh(t.dataset.unduh);
+  const fk = t.closest('[data-fokus]'); if (fk) masukFokus(fk.dataset.fokus);
+  if (t.dataset.semua) keluarFokus();
+  if (t.dataset.geser) geserFokus(+t.dataset.geser);
+  if (t.dataset.set !== undefined && fokus) { simpan(fokus, { status: t.dataset.set }); toast('Status: ' + NAMA[t.dataset.set]); if (t.dataset.set === 'selesai') konfeti(); }
+  if (t.dataset.status) { const n = STATUS[(STATUS.indexOf((milik[t.dataset.status] || {}).status || '') + 1) % 4]; simpan(t.dataset.status, { status: n }); toast('Status: ' + NAMA[n]); if (n === 'selesai') konfeti(); }
+  if (t.dataset.fav) { const on = !(milik[t.dataset.fav] || {}).favorite; simpan(t.dataset.fav, { favorite: on }); toast(on ? 'Added to favorites' : 'Removed from favorites'); }
+};
+const lencana = m => (m.favorite ? '<em class="fv" title="Favorite">♥</em>' : '') + (m.status ? `<em class="fs st-${m.status}">${NAMA[m.status]}</em>` : '');
+function masukFokus(id) {
+  fokus = id; baru = true; tampil();
+  scrollTo({ top: 0, behavior: kurangGerak ? 'auto' : 'smooth' });
+}
+function keluarFokus() {
+  const id = fokus; fokus = null; baru = true; tampil();
+  const el = document.querySelector('[data-fokus="' + id + '"]');
+  if (el) el.closest('.kartu').scrollIntoView({ block: 'center' });
+}
+function geserFokus(d) {
+  const i = buku.findIndex(b => b.id === fokus);
+  masukFokus(buku[(i + d + buku.length) % buku.length].id);
+}
+document.addEventListener('input', e => { if (e.target.id === 'fokusCatatan' && fokus) simpan(fokus, { note: e.target.value }, true); });
+document.addEventListener('change', e => { if (e.target.id === 'fokusHal' && fokus) { simpan(fokus, { page: parseInt(e.target.value) || null }, true); toast('Page saved'); } });
+function unduh(id) {
+  const a = document.createElement('a');
+  a.href = `https://drive.google.com/uc?export=download&id=${encodeURIComponent(id)}`;
+  a.target = '_blank'; a.rel = 'noopener';
+  document.body.appendChild(a); a.click(); a.remove();
+  toast('Starting download...');
+}
+$('unduhBuku').onclick = () => unduh(aktif.id);
+$('simpanHal').onclick = () => simpan(aktif.id, { page: parseInt($('hal').value) || null });
+$('btnCatatan').onclick = () => { $('catatan').hidden = !$('catatan').hidden; };
+$('catatan').oninput = () => simpan(aktif.id, { note: $('catatan').value }, true);
+$('tutup').onclick = () => { tampil(); $('baca').classList.remove('buka'); $('bingkai').src = 'about:blank'; };
+['cari', 'statusf', 'favsaja'].forEach(i => $(i).oninput = () => { baru = true; tampil(); });
+
+$('tampilan').onclick = () => {
+  const baris = $('daftar').classList.toggle('baris');
+  $('tampilan').textContent = baris ? 'Card view' : 'List view';
+};
+function setTema(g) {
+  document.body.classList.toggle('gelap', g);
+  $('tema').textContent = g ? 'Light mode' : 'Dark mode';
+  try { localStorage.setItem('perpustakaan-tema', g ? 'gelap' : 'terang'); } catch (e) {}
+}
+$('tema').onclick = () => setTema(!document.body.classList.contains('gelap'));
+try { setTema(localStorage.getItem('perpustakaan-tema') === 'gelap'); } catch (e) {}
+
+const kurangGerak = matchMedia('(prefers-reduced-motion:reduce)').matches;
+function sorot(t) {
+  const q = $('cari').value.trim(), i = q ? t.toLowerCase().indexOf(q.toLowerCase()) : -1;
+  return i < 0 ? esc(t) : esc(t.slice(0, i)) + '<mark>' + esc(t.slice(i, i + q.length)) + '</mark>' + esc(t.slice(i + q.length));
+}
+function chips() {
+  const n = {}; buku.forEach(b => n[b.kat] = (n[b.kat] || 0) + 1);
+  if (katAktif) {
+    $('chips').innerHTML = `<span class="kat-info">Focused category:</span><button class="chip on pop" data-kat="" aria-label="Clear category filter">${esc(katAktif)}<b>${n[katAktif] || 0}</b><span class="x" aria-hidden="true">&times;</span></button>`;
+    return;
+  }
+  const d = [['', 'All', buku.length], ...Object.keys(n).sort().map(k => [k, k, n[k]])];
+  $('chips').innerHTML = d.map(([k, nama, c]) => `<button class="chip ${k === katAktif ? 'on' : ''}" data-kat="${esc(k)}" aria-pressed="${k === katAktif}">${esc(nama)}<b>${c}</b></button>`).join('');
+}
+const WARNA = [['#0f7a45', '#fff'], ['#f5b800', '#000'], ['#06391f', '#fff'], ['#ffffff', '#000'], ['#3aa66f', '#000']];
+function warna(t) { let h = 0; for (const c of t) h = (h * 31 + c.charCodeAt(0)) % 5; return WARNA[h]; }
+function naik(el, t) {
+  if (kurangGerak || !t) { el.textContent = t; return; }
+  const t0 = performance.now();
+  const f = n => { const p = Math.min((n - t0) / 900, 1); el.textContent = Math.round(t * (1 - Math.pow(1 - p, 3))); if (p < 1) requestAnimationFrame(f); };
+  requestAnimationFrame(f);
+}
+let heroAnim = false;
+function statHero() {
+  const jam = new Date().getHours();
+  $('salam').textContent = (jam < 11 ? 'Good morning' : jam < 15 ? 'Good afternoon' : jam < 19 ? 'Good evening' : 'Good night') + ' · ' + buku.length + ' books waiting for you';
+  const ada = k => buku.filter(b => (milik[b.id] || {})[k]);
+  const v = { sBuku: buku.length, sKat: new Set(buku.map(b => b.kat)).size, sFav: ada('favorite').length, sSelesai: buku.filter(b => (milik[b.id] || {}).status === 'selesai').length };
+  for (const k in v) heroAnim ? ($(k).textContent = v[k]) : naik($(k), v[k]);
+  heroAnim = true;
+}
+let wToast;
+function toast(t) {
+  $('toast').textContent = t; $('toast').classList.add('tampil');
+  clearTimeout(wToast); wToast = setTimeout(() => $('toast').classList.remove('tampil'), 1800);
+}
+function konfeti() {
+  if (kurangGerak) return;
+  const w = ['#f5b800', '#0f7a45', '#ffffff', '#06391f'];
+  for (let i = 0; i < 30; i++) {
+    const e = document.createElement('i'); e.className = 'konfeti';
+    e.style.left = Math.random() * 100 + 'vw'; e.style.background = w[i % 4];
+    e.style.animationDelay = Math.random() * .4 + 's';
+    document.body.appendChild(e); setTimeout(() => e.remove(), 2200);
+  }
+}
+document.addEventListener('keydown', e => {
+  if (e.key === '/' && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) { e.preventDefault(); $('cari').focus(); }
+  if (e.key === 'Escape' && $('baca').classList.contains('buka')) $('tutup').click();
+  if (e.key === 'Enter' && e.target.dataset && e.target.dataset.fokus && e.target.tagName === 'H2') masukFokus(e.target.dataset.fokus);
+  if (fokus && !$('baca').classList.contains('buka') && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) {
+    if (e.key === 'Escape') keluarFokus();
+    if (e.key === 'ArrowLeft') geserFokus(-1);
+    if (e.key === 'ArrowRight') geserFokus(1);
+  }
+});
+onscroll = () => { $('atas').hidden = scrollY < 600; const h = document.documentElement.scrollHeight - innerHeight; $('sp').style.width = (h > 0 ? scrollY / h * 100 : 0) + '%'; };
+$('atas').onclick = () => scrollTo({ top: 0, behavior: kurangGerak ? 'auto' : 'smooth' });
+$('acak').onclick = () => { if (buku.length) masukFokus(buku[Math.floor(Math.random() * buku.length)].id); };
+$('daftar').addEventListener('mousemove', e => {
+  if (kurangGerak) return;
+  const k = e.target.closest('.kartu:not(.besar)'); if (!k) return;
+  const r = k.getBoundingClientRect();
+  k.style.setProperty('--rx', (-((e.clientY - r.top) / r.height - .5) * 6) + 'deg');
+  k.style.setProperty('--ry', (((e.clientX - r.left) / r.width - .5) * 6) + 'deg');
+});
+$('daftar').addEventListener('mouseout', e => {
+  const k = e.target.closest('.kartu');
+  if (k && !k.contains(e.relatedTarget)) { k.style.removeProperty('--rx'); k.style.removeProperty('--ry'); }
+});
+$('chips').addEventListener('wheel', e => {
+  const c = $('chips'), max = c.scrollWidth - c.clientWidth;
+  if (max <= 0 || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+  if ((e.deltaY < 0 && c.scrollLeft <= 0) || (e.deltaY > 0 && c.scrollLeft >= max - 1)) return;
+  c.scrollLeft += e.deltaY; e.preventDefault();
+}, { passive: false });
+const TIPS = ['Press / anywhere to jump straight to the search box.', 'Tap the status button on a book to cycle: Want to read, Reading, Finished.', 'Mark a book as Finished to set off the confetti.', 'Open a book and use Notes to jot down ideas. They save automatically.', 'Favorites, notes, and last pages are saved in this browser.'];
+let tipI = 0, wTip;
+function tip(i) {
+  tipI = (i + TIPS.length) % TIPS.length;
+  const el = $('tipTeks'); el.classList.remove('ganti'); void el.offsetWidth; el.classList.add('ganti');
+  el.textContent = TIPS[tipI];
+  $('tipTitik').innerHTML = TIPS.map((_, j) => `<button data-tip="${j}" class="${j === tipI ? 'on' : ''}" aria-label="Tip ${j + 1}"></button>`).join('');
+  clearTimeout(wTip); wTip = setTimeout(() => tip(tipI + 1), 5500);
+}
+$('tipTitik').onclick = e => { if (e.target.dataset.tip) tip(+e.target.dataset.tip); };
+tip(0);
+let pewaktu;
+function pemuat() {
+  const teks = ['Contacting Google Drive...', 'Reading folders and subfolders...', 'Large collections take a little longer. Please stay on this page.', 'Sorting categories and covers...', 'Almost done. Your books will be ready in a moment.'];
+  $('daftar').innerHTML = '<div class="info muat" role="status" aria-live="polite"><div class="rak" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div><h2>Shelving the books</h2><p id="muatTeks">' + teks[0] + '</p><p id="muatHitung"></p><p>The first load can take about a minute. Please do not close this page.</p></div>';
+  let n = 0;
+  clearInterval(pewaktu);
+  pewaktu = setInterval(() => { const el = $('muatTeks'); if (el && n < teks.length - 1) el.textContent = teks[++n]; }, 4000);
+}
+
+async function mulai() {
+  if (!KONFIG.DRIVE_API_KEY) return pesan('The site is not configured yet. Set DRIVE_API_KEY in the KONFIG section of index.html (steps are in README.md).');
+  pemuat();
+  try { await telusuri(KONFIG.FOLDER_ID, ''); muatMilik(); }
+  catch (e) { clearInterval(pewaktu); return pesan('Could not load Drive (' + esc(e.message) + '). Check that the API key is correct and the folder is shared with "Anyone with the link".'); }
+  clearInterval(pewaktu);
+  buku.sort((a, b) => a.judul.localeCompare(b.judul, 'en'));
+  chips();
+  $('hero').hidden = $('filter').hidden = $('chips').hidden = $('progres').hidden = false;
+  baru = true;
+  tampil();
+}
+mulai();
+</script>
+</body>
+</html>
